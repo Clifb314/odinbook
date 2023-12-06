@@ -12,21 +12,25 @@ exports.createPost = [
       .escape(),
 
     async (req, res, next) => {
-        const {title, content} = req.body
-        try {
-            const author = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-            const newPost = new Posts({
-                title,
-                content,
-                date: new Date()
-            })
-            await newPost.save()
-            await User.findByIdAndUpdate(author._id, {$push: {posts: newPost._id}})
-            return res.json({message: 'Post saved to database'})
-        } catch (err) {
-            console.error(err)
-            return res.status(500).json({message: "Failed to access database"})
-        }
+      const errors = validationResult(req.body)
+      if (!errors.isEmpty()) {
+        return res.status(401).json({errors: errors.array(), message: 'Input failed validation'})
+      }
+      const {title, content} = req.body
+      try {
+          const author = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+          const newPost = new Posts({
+              title,
+              content,
+              date: new Date()
+          })
+          await newPost.save()
+          await User.findByIdAndUpdate(author._id, {$push: {posts: newPost._id}})
+          return res.json({message: 'Post saved to database'})
+      } catch (err) {
+          console.error(err)
+          return res.status(500).json({message: "Failed to access database"})
+      }
     }
 ]
 
@@ -39,6 +43,10 @@ exports.editPost = [
     .escape(),
   
   async (req, res, next) => {
+    const errors = validationResult(req.body)
+    if (!errors.isEmpty()) {
+      return res.status(401).json({errors: errors.array(), message: 'Input failed validation'})
+    }
     const { title, content } = req.body
     try {
         const update = {
