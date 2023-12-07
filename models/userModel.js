@@ -19,7 +19,8 @@ const userSchema = new Schema({
         email: {type: String, required: true},    
     },
     friends: [{type: Schema.Types.ObjectId, ref: 'userModel'}],
-    posts: [{type: Schema.Types.ObjectId, ref: 'postModel'}]
+    posts: [{type: Schema.Types.ObjectId, ref: 'postModel'}],
+    inbox: [{type: Schema.Types.ObjectId, ref: 'inboxModel'}]
 })
 
 userSchema.virtual('age').get(function() {
