@@ -54,7 +54,7 @@ exports.signup = [
         return res.status(401).json({errors: errors.array(), message: 'Input validation failed'})
       }
 
-      const {username, email, password, fName, lName, bday } = req.body
+      const { username, email, password, fName, lName, bday } = req.body
       //check if username exists
       const checkUsername = await User.findOne({username: username}).exec()
       if (checkUsername) return res.status(400).json({message: 'Username taken'})
@@ -101,7 +101,7 @@ exports.signup = [
 exports.guestHome = async (req, res, next) => {
 
   try {
-    const feed = User.find({}, {username: 1, friends: 1, posts: 1, _id: 0})
+    const feed = User.find({}, {username: 1, friends: 1, posts: 1})
       .populate({
         path: 'posts',
         select: 'title content date',

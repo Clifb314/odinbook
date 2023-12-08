@@ -103,3 +103,15 @@ exports.markRead = async (req, res, next) => {
         return res.status(500).json({message: 'Could not access database'})  
     }
 }
+
+exports.delMsg = async (req, res, next) => {
+    try {
+        const user = verify()
+        const msg = await Inbox.findOneAndDelete({_id: req.params.inboxid, to: user_id}).exec()
+        if (!msg) return res.status(401).json({message: 'Access denied'})
+        return res.json({message: 'Message deleted'})
+    } catch(err) {
+        console.error(err)
+        return res.status(500).json({message: 'Could not access database'})     
+    }
+}

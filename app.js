@@ -47,8 +47,8 @@ passport.use(
     callbackURL: 'http://localhost:3001/auth/google/callback',
     passReqToCallback: true
     },
-  async function (request, accessToken, refreshToken, profile, done) {
-    return done(null, profile)
+    function (request, accessToken, refreshToken, profile, done) {
+      return done(null, profile)
   }
 ))
 
@@ -88,6 +88,7 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const postRouter = require('./routes/posts')
 const commentRouter = require('./routes/comments')
+const inboxRouter = require('./routes/inbox')
 
 const app = express();
 
@@ -98,10 +99,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors())
 
-app.use('/', indexRouter);
-app.use('/auth', usersRouter);
-app.use('/posts', postRouter)
-app.use('/comments', commentRouter)
+app.use('/api', indexRouter);
+app.use('/api/auth', usersRouter);
+app.use('/api/posts', postRouter)
+app.use('/api/comments', commentRouter)
+app.use('/api/inbox', inboxRouter)
 
 
 

@@ -11,24 +11,26 @@ router.post('/login', userController.login)
 //upload icon
 router.post('/icon', userController.uploadIcon)
 
+//userlist
+router.get('/userlist', userController.userList)
 
 //home page
-router.get('/home')
+router.get('/home', userController.accountPage)
 
 //friends list
 router.get('/friends', userController.friendList)
 //add/del friend
-router.put('/friends/add/:friendid', userController.addFriend)
-router.put('/friends/delete/friendid', userController.delFriend)
+router.put('/add/:friendid', userController.addFriend)
+router.put('/delete/friendid', userController.delFriend)
 
 //account
 router.get('/account', userController.accountPage)
 //edit
 router.put('/account/', userController.editAcct)
 //link google
-router.get('/auth/google', userController.googleAuth)
+router.get('/google', userController.googleAuth)
 
 //user detail page
-router.get('/:userid')
+router.get('/:userid', userController.userDetail)
 
 module.exports = router;

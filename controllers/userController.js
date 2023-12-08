@@ -121,7 +121,7 @@ exports.editAcct = [
             const update = {
                 username,
                 userDetails: {
-                    fullName: fname + ' ' + lName,
+                    fullName: fName + ' ' + lName,
                     birthdate: bday,
                     email,
                 }
@@ -160,10 +160,22 @@ exports.friendList = async (req, res, next) => {
     }
 }
 
+exports.userList = async (req, res, next) => {
+    try {
+        const users = User.find({}, {username: 1, icon: 1}).lean().sort('-username').exec()
+        if (users.length < 1) return res.json({message: 'database is empty!'})
+        return res.json(users)
+    } catch (err) {
+        console.error(err)
+        return res.status(500).json({message: 'Unable to update database'}) 
+    }
+}
+
 exports.addFriend = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     try {  
         await User.findByIdAndUpdate(user._id, {$push: {friendList: req.params.friendid}}).exec()
+        return {message: 'Friends list updated'}
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Unable to update database'})
@@ -174,6 +186,7 @@ exports.delFriend = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     try {  
         await User.findByIdAndUpdate(user._id, {$pull: {friendList: req.params.friendid}}).exec()
+        return {message: 'Friends list updated'}
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Unable to update database'})
@@ -182,7 +195,7 @@ exports.delFriend = async (req, res, next) => {
 
 exports.uploadIcon = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    if (!user) return res.json({message: "Access denied"})
+    if (!user) return res.status(403).json({message: "Access denied"})
 
     try {
         upload.single(user.username)
@@ -196,5 +209,23 @@ exports.uploadIcon = async (req, res, next) => {
     } catch(err) {
         console.error(err)
         res.status(500).json({message: 'Failed to upload image'})
+    }
+}
+
+exports.userDetail = async (req, res, next) => {
+    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+    if (!user) return res.status(403).json({message: "Access denied"})
+    try {
+        const myUser = await User.findById(req.params.userid, {username: 1, friends: 1})
+          .populate({
+            path: 'friends',
+            select: 'username'
+          })
+          .exec()
+        if (!myUser) return res.status(400).json({message: 'User not found'})
+        return res.json(myUser)
+    } catch(err) {
+        console.error(err)
+        res.status(500).json({message: 'Failed to access database'})
     }
 }
