@@ -20,7 +20,8 @@ exports.createComment = [
                 author: user._id,
             })
             await myCom.save()
-            await Posts.findByIdAndUpdate(req.query.postid, {$push: {comments: myCom._id}}).exec()   
+            await Posts.findByIdAndUpdate(req.query.postid, {$push: {comments: myCom._id}}).exec()
+            return res.json(myCom)  
         } catch(err) {
             console.error(err)
             return res.status(500).json({message: 'Failed to save comment to database'})
@@ -67,7 +68,7 @@ exports.likeComment = async (req, res, next) => {
     }
 }
 
-exports.delComment = async (req, res, next) => {
+exports.dislikeComment = async (req, res, next) => {
     try {
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
         await Comments.findByIdAndUpdate(req.params.commentid, {$pull: {likes: user._id}}).exec()
@@ -88,6 +89,26 @@ exports.commentDetail = async (req, res, next) => {
           .exec()
         if (!myCom) return res.status(401).json({message: 'Comment not found'})
         return res.json(myCom)
+    } catch(err) {
+        console.log(err)
+        return res.status(500).json({message: 'Failed to access database'})
+    }
+}
+
+exports.commentList = async (req, res, next) => {
+    try {
+        const comList = Posts.findById(req.query.postid, {comments: 1})
+          .populate({
+            path: 'comments',
+            populate: {
+                path: 'author',
+                select: 'username'
+            }
+          })
+        if (!comList) return res.status(401).json({message: 'Parent post not found'})
+        const output = comList.comments
+        if (output.length < 1) return res.status(401).json({message: 'This post has not comments yet'})
+        return res.json(output)
     } catch(err) {
         console.log(err)
         return res.status(500).json({message: 'Failed to access database'})

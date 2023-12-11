@@ -175,7 +175,7 @@ exports.addFriend = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     try {  
         await User.findByIdAndUpdate(user._id, {$push: {friendList: req.params.friendid}}).exec()
-        return {message: 'Friends list updated'}
+        return res.json({message: 'Friends list updated'})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Unable to update database'})
@@ -185,8 +185,24 @@ exports.addFriend = async (req, res, next) => {
 exports.delFriend = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     try {  
-        await User.findByIdAndUpdate(user._id, {$pull: {friendList: req.params.friendid}}).exec()
-        return {message: 'Friends list updated'}
+        await User.findByIdAndUpdate(req.params.friendid, {$pull: {requests: user._id}}).exec()
+        return res.json({message: 'Friends list updated'})
+    } catch(err) {
+        console.error(err)
+        return res.status(500).json({message: 'Unable to update database'})
+    }
+}
+
+exports.acceptFriend = async (req, res, next) => {
+    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+    try {
+        await User.findByIdAndUpdate(user._id, 
+            {
+              $pull: {requests: req.params.friendid}, 
+              $push: {friendList: req.params.friendid}
+            }).exec()
+        await User.findByIdAndUpdate(req.params.friendid, {$push: {friendList: user._id}})
+        return res.json({message: 'Friend request accepted'})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Unable to update database'})

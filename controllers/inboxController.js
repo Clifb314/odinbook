@@ -18,7 +18,7 @@ exports.inboxList = async (req, res, next) => {
         if (messages.length < 1) return res.json({message: 'Inbox empty!'})
     
         //will filter into seen and unseen on client end
-        return res.json({messages})    
+        return res.json(messages)    
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Could not access database'})
@@ -85,6 +85,7 @@ exports.sendMsg = [
             }
             //update target user inbox
             await Users.findByIdAndUpdate(to, {$push: {inbox: newMsg._id}}).exec()
+            return res.json(newMsg)
         } catch(err) {
             console.error(err)
             return res.status(500).json({message: 'Could not access database'})

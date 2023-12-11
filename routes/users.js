@@ -21,7 +21,8 @@ router.get('/home', userController.accountPage)
 router.get('/friends', userController.friendList)
 //add/del friend
 router.put('/add/:friendid', userController.addFriend)
-router.put('/delete/friendid', userController.delFriend)
+router.put('/delete/:friendid', userController.delFriend)
+router.put('/accept/:friendid', userController.acceptFriend)
 
 //account
 router.get('/account', userController.accountPage)
