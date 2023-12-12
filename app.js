@@ -44,7 +44,9 @@ passport.use(
   new gStrat({
     clientID: process.env.gClientID,
     clientSecret: process.env.gSECRET,
-    callbackURL: 'http://localhost:3001/auth/google/callback',
+    callbackURL: '/oauth2/redirect/google',
+    scope: ['profile'],
+    // 'http://localhost:3001/auth/google/callback',
     passReqToCallback: true
     },
     function (request, accessToken, refreshToken, profile, done) {
