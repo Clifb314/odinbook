@@ -52,7 +52,7 @@ exports.googleAuth = async (req, res, next) => {
     //i think this has to go in passport.use in app.js. will review
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     if (!user) return res.status(401).json({message: 'Must be logged in to link google account'})
-    passport.authenticate('google', {scope: ['profile']}, async (err, profile) => {
+    passport.authenticate('google', {scope: ['profile'], session: false}, async (err, profile) => {
         if (err || !profile) return res.status(401).json({
             err,
             message: 'Google account not found'
@@ -64,6 +64,7 @@ exports.googleAuth = async (req, res, next) => {
             coverPhoto: profile.coverPhoto
         }
         const myUser = await User.findByIdAndUpdate(user._id, {googleAcct: update}, {new: true}).exec()
+        if (!myUser) return res.json(update)
         return res.json(myUser)
     })
 }
@@ -72,7 +73,7 @@ exports.googleAuth = async (req, res, next) => {
 exports.accountPage = async (req, res, next) => {
     try {
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-        const myUser = User.findById(user._id).exec()
+        const myUser = User.findById(user._id, {_password: 0}).exec()
 
         if (!myUser) return res.status(400).json({message: 'User not found'})
         else return res.json(myUser)
