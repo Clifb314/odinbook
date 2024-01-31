@@ -161,6 +161,7 @@ exports.postList = async (req, res, next) => {
             model: 'userModel',
             select: 'username',
         },
+        //populate replyTo also
         perDocumentLimit: 5
       })
       .populate({

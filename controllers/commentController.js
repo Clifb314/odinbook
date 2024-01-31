@@ -18,6 +18,7 @@ exports.createComment = [
                 content: req.body.content,
                 date: new Date(),
                 author: user._id,
+                replyTo: req.body.replyTo ? req.body.replyTo : null
             })
             await myCom.save()
             await Posts.findByIdAndUpdate(req.query.postid, {$push: {comments: myCom._id}}).exec()
@@ -102,9 +103,21 @@ exports.commentList = async (req, res, next) => {
             path: 'comments',
             populate: {
                 path: 'author',
-                select: 'username'
+                select: 'username',
+                model: 'userModel'
+            },
+            populate: {
+                path: 'replyTo',
+                select: 'author',
+                model: 'commentModel',
+                populate: {
+                    path: 'author',
+                    select: 'username',
+                    model: 'userModel'
+                }
+
             }
-          })
+          }).exec()
         if (!comList) return res.status(401).json({message: 'Parent post not found'})
         const output = comList.comments
         if (output.length < 1) return res.status(401).json({message: 'This post has not comments yet'})
