@@ -20,6 +20,7 @@ exports.createPost = [
       try {
           const author = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
           const newPost = new Posts({
+              author,
               title,
               content,
               date: new Date()
@@ -122,6 +123,9 @@ exports.postDetail = async (req, res, next) => {
 
 exports.postList = async (req, res, next) => {
   try {
+    //want to prioritize friends posts
+    //will show top or recents interspersed with friends recent posts
+    const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     const sorting = req.param.sorting === 'top' ? {likes: -1} : {date: -1}
     const list = Posts.find({})
       .populate({
@@ -137,8 +141,49 @@ exports.postList = async (req, res, next) => {
         path: 'author',
         select: 'username'
       })
+      .limit(10)
       .sort(sorting)
       .exec()
+    
+    //find friend's posts
+    let params = []
+    if (myUser.friends) {
+      for (const friend of myUser.friends) {
+        params.push({author: friend})
+      }
+    }
+    if (params.legnth > 0) {
+      const friendsPosts = await Posts.find({$or: params})
+      .populate({
+        path: 'comments',
+        populate: {
+            path: 'author',
+            model: 'userModel',
+            select: 'username',
+        },
+        perDocumentLimit: 5
+      })
+      .populate({
+        path: 'author',
+        select: 'username'
+      }).limit(10).exec()
+
+      if (friendsPosts.length > 0) {
+        list.concat(friendsPosts)
+        //shuffle list
+        let current = list.length, randomItem
+        while (current > 0) {
+          randomItem = Math.floor(Math.random() * current)
+          current -= 1
+          //can apparently do this in one line
+          //[list[current], list[rano]] = [list[rand], list[current]]
+          let tmp = list[current]
+          list[current] = list[randomItem]
+          list[randomItem] = tmp
+        }
+      }
+    }
+
 
     if (list.length < 0) return res.json({message: "Nothing's here.."})
     return res.json(list)
