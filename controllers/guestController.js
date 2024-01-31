@@ -31,7 +31,7 @@ exports.signup = [
     .trim()
     .escape()
     .custom(async (value, { req }) => {
-      return value !== req.body.password
+      return value === req.body.password
     })
     .withMessage('Passwords must match'),
   body('bday')

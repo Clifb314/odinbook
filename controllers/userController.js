@@ -112,22 +112,39 @@ exports.editAcct = [
     .withMessage("No Special characters"),
     body("bday", "Please enter a valid date")
     .isDate(),
+  body('password').trim().escape(),
+  body('checkPW').trim().escape().custom((value, {req}) => {
+    return value === req.body.password 
+    }),
+  body('oldPW').trim().escape(),
 
     async (req, res, next) => {
         const errors = validationResult(req.body)
         if (!errors.isEmpty()) return res.status(400).json({message: 'Validation errors', errors: errors.array()})
 
         try {
-            const {username, email, fName, lName, bday} = req.body
+            const {username, email, fName, lName, bday, password, checkPW, oldPW} = req.body
+            const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+            const target = User.findById(user._id).exec()
+            if (!target) return res.json({message: 'Access denied or User not found'})
+            const match = bcrypt.compare(oldPW, target._password)
+            if (!match) return res.json({message: 'Incorrect password'})
+            let updatePW
+            if (password.length < 1) {
+                updatePW = oldPW
+            } else {
+                updatePW = await bcrypt.hash(password, 10)
+            }
             const update = {
                 username,
+                _password: updatePW,
                 userDetails: {
                     fullName: fName + ' ' + lName,
                     birthdate: bday,
                     email,
                 }
             }
-            const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+
             const push = User.findByIdAndUpdate(user._id, update, {new: true}).exec()
             return res.json(push)
         } catch(err) {

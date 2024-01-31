@@ -12,5 +12,5 @@ router.post('/send', inboxController.sendMsg)
 router.put('/:inboxid/seen', inboxController.markRead)
 //delete
 router.delete('/:inboxid/delete', inboxController.delMsg)
-//message detail
+//message detail, message chain
 router.get('/:inboxid', inboxController.messageDetail)
