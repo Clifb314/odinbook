@@ -250,10 +250,20 @@ exports.userDetail = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     if (!user) return res.status(403).json({message: "Access denied"})
     try {
-        const myUser = await User.findById(req.params.userid, {username: 1, friends: 1})
+        const myUser = await User.findById(req.params.userid, {username: 1, friends: 1, posts: 1, icon: 1})
           .populate({
             path: 'friends',
-            select: 'username'
+            select: 'username icon'
+          })
+          .populate({
+            path: 'posts',
+            populate: {
+                path: 'author comments',
+                populate: {
+                    path: 'posts.comments.author'
+                }
+            }
+
           })
           .exec()
         if (!myUser) return res.status(400).json({message: 'User not found'})
