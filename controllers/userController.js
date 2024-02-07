@@ -189,14 +189,40 @@ exports.userList = async (req, res, next) => {
     }
 }
 
+
+//send request
 exports.addFriend = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     try {  
-        await User.findByIdAndUpdate(user._id, {$push: {friendList: req.params.friendid}}).exec()
-        return res.json({message: 'Friends list updated'})
+        //await User.findByIdAndUpdate(user._id, {$push: {friendList: req.params.friendid}}).exec()
+        await User.findByIdAndUpdate(req.params.friendid, {$push: {requests: user._id}}).exec()
+        await User.findByIdAndUpdate(user._id, {$push: {pending: req.params.friendid}})
+        return res.json({message: 'Friends request sent'})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Unable to update database'})
+    }
+}
+
+exports.delReq = async (req, res, next) => {
+    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+    try {
+        await User.findByIdAndUpdate(user._id, {$pull: {requests: req.params.friendid}})
+        await User.findByIdAndUpdate(req.params.friendid, {$pull: {pending: user._id}})
+    } catch(err) {
+        console.error(err)
+        return res.status(500).json({message: 'Unable to access database'})
+    }
+}
+
+exports.rescindReq = async (req, res, next) => {
+    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+    try {
+        await User.findByIdAndUpdate(req.params.friendid, {$pull: {requests: user._id}})
+        await User.findByIdAndUpdate(user._id, {$pull: {pending: req.params.friendid}})
+    } catch(err) {
+        console.error(err)
+        return res.status(500).json({message: 'Unable to access database'})
     }
 }
 
@@ -204,6 +230,7 @@ exports.delFriend = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     try {  
         await User.findByIdAndUpdate(req.params.friendid, {$pull: {requests: user._id}}).exec()
+        await User.findByIdAndUpdate(user._id, {$pull: {friends: req.params.friendid}})
         return res.json({message: 'Friends list updated'})
     } catch(err) {
         console.error(err)
@@ -213,13 +240,17 @@ exports.delFriend = async (req, res, next) => {
 
 exports.acceptFriend = async (req, res, next) => {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+    const {friendid} = req.params
     try {
         await User.findByIdAndUpdate(user._id, 
             {
-              $pull: {requests: req.params.friendid}, 
-              $push: {friendList: req.params.friendid}
+              $pull: {requests: friendid}, 
+              $push: {friendList: friendid}
             }).exec()
-        await User.findByIdAndUpdate(req.params.friendid, {$push: {friendList: user._id}})
+        await User.findByIdAndUpdate(friendid, {
+            $push: {friendList: user._id},
+            $pull: {pending: user._id}
+        })
         return res.json({message: 'Friend request accepted'})
     } catch(err) {
         console.error(err)

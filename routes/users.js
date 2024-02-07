@@ -22,6 +22,8 @@ router.get('/friends', userController.friendList)
 //add/del friend
 router.put('/add/:friendid', userController.addFriend)
 router.put('/delete/:friendid', userController.delFriend)
+router.put('/delreq/:friendid', userController.delReq)
+router.put('/rescreq/:friendid', userController.rescindReq)
 router.put('/accept/:friendid', userController.acceptFriend)
 
 //account

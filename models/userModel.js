@@ -20,9 +20,10 @@ const userSchema = new Schema({
     },
     friends: [{type: Schema.Types.ObjectId, ref: 'userModel'}],
     requests: [{type: Schema.Types.ObjectId, ref: 'userModel'}],
+    pending: [{type: Schema.Types.ObjectId, ref: 'userModel'}],
     posts: [{type: Schema.Types.ObjectId, ref: 'postModel'}],
-    inbox: [{type: Schema.Types.ObjectId, ref: 'inboxModel'}]
-})
+    inbox: [{type: Schema.Types.ObjectId, ref: 'inboxModel'}],
+}, {toJSON: {virtuals: true}})
 
 userSchema.virtual('age').get(function() {
     const today = new Date()
