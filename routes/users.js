@@ -36,4 +36,9 @@ router.get('/google', userController.googleAuth)
 //user detail page
 router.get('/:userid', userController.userDetail)
 
+//send/update icon
+router.put('/icon/edit', userController.editIcon)
+router.get('/icon', userController.sendIcon)
+
+
 module.exports = router;

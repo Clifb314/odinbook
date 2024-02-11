@@ -14,3 +14,7 @@ router.put('/:inboxid/seen', inboxController.markRead)
 router.delete('/:inboxid/delete', inboxController.delMsg)
 //message detail, message chain
 router.get('/:inboxid', inboxController.messageDetail)
+
+//to find message chain from a friend's page
+//use query
+router.get('/find', inboxController.findTo)

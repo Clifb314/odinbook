@@ -27,7 +27,20 @@ const bcrypt = require('bcryptjs')
 
 passport.use(new localStrat(async (username, password, done) => {
   try {
-    const myUser = await User.findOne({username}).exec()
+    const myUser = await User.findOne({username})
+    .populate({
+      path: 'friends',
+      select: 'icon username'
+    })
+    .populate({
+      path: 'requests',
+      select: 'icon username'
+    })
+    .populate({
+      path: 'pending',
+      select: 'icon username'
+    })
+    .exec()
     if (!myUser) return done(null, false, 'User not found')
 
     bcrypt.compare(password, myUser._password, (err, res) => {

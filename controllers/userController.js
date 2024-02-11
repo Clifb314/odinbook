@@ -4,16 +4,19 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
+const uuid = require('uuidv4').uuid
+const fs = require('node:fs/promises')
 
 
 //multer setup for profile icons
-const multer = require('multer')
+const multer = require('multer');
+const path = require('node:path');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'icons')
   },
   filename: (req, file, cb) => {
-    cb(null, file.fieldname + '-' + Date.now())
+    cb(null, uuid())
   }
 })
 
@@ -82,6 +85,50 @@ exports.accountPage = async (req, res, next) => {
             console.error(err)
             return res.status(500).json({message: 'Unable to access database'})
         }
+}
+
+exports.editIcon = [
+
+    upload.single('icon'),
+
+    async (req, res, next) => {
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+        if (!user) return res.status(500).json({err: 'Must be logged in'})
+        const myUser = await User.findById(user._id, {icon: 1, username: 1}).exec()
+        if (!myUser) return res.status(500).json({err: 'User not found'})
+
+
+        if (myUser.icon) {
+            //If an icon already exists, delete the old one
+            try{
+                await fs.unlink(path.join(__dirname, 'icons', myUser.icon))
+                myUser.icon = req.filename
+                await myUser.save()
+                console.log(`updated icon for ${myUser.username}`)
+            } catch(err) {
+                console.log(`failed to updated icon for ${myUser.username}`)
+                console.error(err)
+                return res.status(500).json({err: err})
+            }
+            
+        } else {
+            myUser.icon = req.file.filename
+            await myUser.save()
+        }
+    }
+
+]
+
+exports.sendIcon = async (req, res, next) => {
+    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+    if (!user) return res.status(500).json({message: 'Must be logged in'})
+    const myUser = await User.findById(user._id, {icon: 1, username: 1}).exec()
+    if (!myUser) return res.status(500).json({message: 'User not found'})
+    if (!myUser.icon) return res.json({icon: null})
+
+    res.sendFile(
+        path.join(__dirname, myUser.icon)
+    )
 }
 
 

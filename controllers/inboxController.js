@@ -60,6 +60,23 @@ exports.messageDetail = async (req, res, next) => {
     }
 }
 
+
+exports.findTo = async (req, res, next) => {
+    const user = verify()
+
+    try {
+        const allMsgs = await Inbox.find({to: req.params.to, from: user._id}).sort({date: -1}).exec()
+        const msg = allMsgs.shift()
+        if (!msg) {
+            return res.json({new: true})
+        } else return res.json(msg)    
+    } catch(err) {
+        console.error(err)
+        return res.status(500).json({message: 'Could not access database'})   
+    }
+}
+
+
 exports.sendMsg = [
     body('title').trim().escape(),
     body('content').trim().escape().isLength({min: 1}).withMessage('message cannot be empty'),
