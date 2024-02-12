@@ -4,10 +4,7 @@ const Schema = mongoose.Schema
 const userSchema = new Schema({
     username: {type: String, required: true},
     _password: {type: String, required: true},
-    icon: {
-        data: Buffer, 
-        contentType: String
-    },
+    icon: {type: String},
     googleAcct: {
         displayName: {type: String},
         id: {type: String},

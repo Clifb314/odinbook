@@ -131,6 +131,15 @@ exports.sendIcon = async (req, res, next) => {
     )
 }
 
+exports.sendUserIcon = async (req, res, next) => {
+    const user = await User.findById(req.parmas.id, {icon: 1}).exec()
+    if (!user || !user.icon) return res.status(500).json({message: 'User not found or icon blank'})
+    
+    res.sendFile(
+        path.join(__dirname, user.icon)
+    )
+}
+
 
 exports.editAcct = [
     //validate

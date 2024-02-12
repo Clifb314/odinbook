@@ -39,6 +39,8 @@ router.get('/:userid', userController.userDetail)
 //send/update icon
 router.put('/icon/edit', userController.editIcon)
 router.get('/icon', userController.sendIcon)
+router.get('/icon/:id', userController.sendUserIcon)
+
 
 
 module.exports = router;
