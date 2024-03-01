@@ -4,7 +4,7 @@ const Schema = mongoose.Schema
 const userSchema = new Schema({
     username: {type: String, required: true},
     _password: {type: String, required: true},
-    icon: {type: String},
+    icon: {type: String, default: null},
     googleAcct: {
         displayName: {type: String},
         id: {type: String},
@@ -28,18 +28,19 @@ userSchema.virtual('age').get(function() {
     const month = today.getMonth()
     const day = today.getDay()
 
-    const birthYr = this.userDetails.birthdate.getFullYear()
-    const birthMo = this.userDetails.birthdate.getMonth()
-    const birthDa = this.userDetails.birthdate.getDate()
+    const ISOString = this.userDetails.birthdate
+    const birthYr = new Date(ISOString).getFullYear()
+    const birthMo = new Date(ISOString).getMonth()
+    const birthDa = new Date(ISOString).getDate()
 
     let age = year - birthYr
 
-    if (month - birthMo < 1) {
-        if (month - birthMo === 0 && day - birthDa < 1) age += 1
-        else if (month - birthMo < 0) age += 1
+    if (month - birthMo > -1) {
+        if (month - birthMo === 0 && day - birthDa > -1) return age
+        else if (month - birthMo > 0) return age
     }
 
-    return age
+    return (age - 1)
 })
 
 module.exports = mongoose.model('userModel', userSchema)

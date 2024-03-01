@@ -21,3 +21,6 @@ router.put('/:commentid/down', commentController.dislikeComment)
 
 //comment details, might not need this
 router.get('/:commentid', commentController.commentDetail)
+
+
+module.exports = router;

@@ -44,7 +44,10 @@ passport.use(new localStrat(async (username, password, done) => {
     if (!myUser) return done(null, false, 'User not found')
 
     bcrypt.compare(password, myUser._password, (err, res) => {
-      if (res) return done(null, myUser)
+      if (res) {
+        myUser._password = "It's a secret"
+        return done(null, myUser)
+      }
       else return done(null, false, {message: 'Password incorrect'})
     })
 
@@ -62,7 +65,7 @@ passport.use(
     // 'http://localhost:3001/auth/google/callback',
     passReqToCallback: true
     },
-    function (request, accessToken, refreshToken, profile, done) {
+    function (accessToken, refreshToken, profile, done) {
       return done(null, profile)
   }
 ))
@@ -76,15 +79,6 @@ const options = {
 passport.use(new jwtStrat(options, function(payload, done) {
   return done(null, payload)
 }))
-
-app.use(function(req, res, next) {
-  const bearerHeader = req.headers.authorization
-  if (bearerHeader) {
-    const tokenArr = bearerHeader.split(' ')
-    req.token = tokenArr[1]
-  }
-  next()
-})
 
 
 
@@ -113,6 +107,16 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors())
+
+app.use(function(req, res, next) {
+  const bearerHeader = req.headers.authorization
+  if (bearerHeader) {
+    const tokenArr = bearerHeader.split(' ')
+    req.token = tokenArr[1]
+  }
+  next()
+})
+
 
 app.use('/api', indexRouter);
 app.use('/api/auth', usersRouter);

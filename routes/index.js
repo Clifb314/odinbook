@@ -4,7 +4,7 @@ const guestControl = require('../controllers/guestController')
 
 
 //guest homepage
-router.get('/home')
+router.get('/home', guestControl.guestHome)
 
 
 //signup

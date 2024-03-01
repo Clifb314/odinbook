@@ -37,14 +37,16 @@ exports.signup = [
   body('bday')
     .trim()
     .escape()
-    .isDate().withMessage('Must be valid date'),
+    .isISO8601().withMessage('Must be valid date'),
   body('fName')
     .trim()
     .escape()
+    .isLength({min: 1}).withMessage('First name is required')
     .isAlpha().withMessage('No special characters'),
   body('lName')
     .trim()
     .escape()
+    .isLength({min: 1}).withMessage('Last name is required')
     .isAlpha().withMessage('No special characters'),
 
     async (req, res, next) => {
@@ -58,19 +60,20 @@ exports.signup = [
       //check if username exists
       const checkUsername = await User.findOne({username: username}).exec()
       if (checkUsername) return res.status(400).json({message: 'Username taken'})
-
+      console.log(req.body)
+      console.log(email)
       try {
         const hashed = await bcrypt.hash(password, 10)
         const newUser = new User({
           username,
-          email,
           _password : hashed,
           userDetails: {
             fullName: fName + ' ' + lName,
             birthdate: bday,
+            email,
           }
         })
-
+        console.log(newUser)
         await newUser.save()
         const payload = {
           _id: newUser._id,
@@ -83,7 +86,7 @@ exports.signup = [
             if (err) return next(err)
             return res.json({
               token,
-              newUser,
+              user: {_id: newUser._id, username: newUser.username},
               message: 'Logged in'})
           }
         )
@@ -101,7 +104,7 @@ exports.signup = [
 exports.guestHome = async (req, res, next) => {
 
   try {
-    const feed = User.find({}, {username: 1, friends: 1, posts: 1})
+    const feed = await User.find({}, {username: 1, friends: 1, posts: 1})
       .populate({
         path: 'posts',
         select: 'title content date',

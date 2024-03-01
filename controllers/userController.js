@@ -35,10 +35,10 @@ exports.login = [
             jwt.sign({
                 _id: user._id,
                 username: user.username,
-                googleID: user.googleAcct.id
+                googleID: user.googleAcct ? user.googleAcct.id : null
                 },
             process.env.SECRET,
-            {expiresIn: '15m', issuer: 'CB'},
+            {expiresIn: '60m', issuer: 'CB'},
             (err, token) => {
                 res.json({
                     token,
@@ -53,8 +53,12 @@ exports.login = [
 
 exports.googleAuth = async (req, res, next) => {
     //i think this has to go in passport.use in app.js. will review
-    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    if (!user) return res.status(401).json({message: 'Must be logged in to link google account'})
+    try {
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+        if (!user) return res.status(401).json({message: 'Must be logged in to link google account'})    
+    } catch(err) {
+        return res.status(500).json({message: 'Access denied'})
+    }
     passport.authenticate('google', {scope: ['profile'], session: false}, async (err, profile) => {
         if (err || !profile) return res.status(401).json({
             err,
@@ -76,7 +80,25 @@ exports.googleAuth = async (req, res, next) => {
 exports.accountPage = async (req, res, next) => {
     try {
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-        const myUser = User.findById(user._id, {_password: 0}).exec()
+        const myUser = await User.findById(user._id, {_password: 0})
+        .populate({
+            path: 'posts',
+            model: 'postModel',
+            populate: {
+                path: 'comments',
+                //model: 'userModel',
+            },
+            // populate: {
+            //     path: 'comments',
+            //     model: 'commentModel',
+            //     populate: {
+            //         path: 'author',
+            //         model: 'userModel',
+            //     }
+            // }
+        })
+        .exec()
+        console.log(myUser)
 
         if (!myUser) return res.status(400).json({message: 'User not found'})
         else return res.json(myUser)
@@ -132,12 +154,18 @@ exports.sendIcon = async (req, res, next) => {
 }
 
 exports.sendUserIcon = async (req, res, next) => {
-    const user = await User.findById(req.parmas.id, {icon: 1}).exec()
-    if (!user || !user.icon) return res.status(500).json({message: 'User not found or icon blank'})
-    
-    res.sendFile(
-        path.join(__dirname, user.icon)
-    )
+    try {
+        if (!req.params.id) return res.json({message: 'User id missing'})
+        const user = await User.findById(req.parmas.id, {icon: 1}).exec()
+        if (!user || !user.icon) return res.status(500).json({message: 'User not found or icon blank'})
+        
+        res.sendFile(
+            path.join(__dirname, user.icon)
+        )
+    } catch(err) {
+        return res.status(500).json(err)
+    }
+
 }
 
 
@@ -216,16 +244,16 @@ exports.editAcct = [
 exports.friendList = async (req, res, next) => {
     try {
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-        const friends = await User.findById(user._id, 'friends')
+        const getUser = await User.findById(user._id, 'friends')
         .populate({
             path: 'friends',
-            select: 'username'
+            select: 'username icon'
         })
         .sort({username: 1})
         .exec()
         
-        if (friends.length < 1) return res.json({message: 'friends list is empty'})
-        else return res.json(friends)
+        if (getUser.friends.length < 1) return res.json({message: 'friends list is empty'})
+        else return res.json(getUser.friends)
         
 
     } catch(err) {
@@ -236,7 +264,7 @@ exports.friendList = async (req, res, next) => {
 
 exports.userList = async (req, res, next) => {
     try {
-        const users = User.find({}, {username: 1, icon: 1}).lean().sort('-username').exec()
+        const users = await User.find({}, {username: 1, icon: 1}).lean().sort('-username').exec()
         if (users.length < 1) return res.json({message: 'database is empty!'})
         return res.json(users)
     } catch (err) {
@@ -248,8 +276,8 @@ exports.userList = async (req, res, next) => {
 
 //send request
 exports.addFriend = async (req, res, next) => {
-    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    try {  
+    try { 
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'}) 
         //await User.findByIdAndUpdate(user._id, {$push: {friendList: req.params.friendid}}).exec()
         await User.findByIdAndUpdate(req.params.friendid, {$push: {requests: user._id}}).exec()
         await User.findByIdAndUpdate(user._id, {$push: {pending: req.params.friendid}})
@@ -261,10 +289,11 @@ exports.addFriend = async (req, res, next) => {
 }
 
 exports.delReq = async (req, res, next) => {
-    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     try {
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
         await User.findByIdAndUpdate(user._id, {$pull: {requests: req.params.friendid}})
         await User.findByIdAndUpdate(req.params.friendid, {$pull: {pending: user._id}})
+        return res.json({message: 'Friend request denied'})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Unable to access database'})
@@ -272,10 +301,11 @@ exports.delReq = async (req, res, next) => {
 }
 
 exports.rescindReq = async (req, res, next) => {
-    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
     try {
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
         await User.findByIdAndUpdate(req.params.friendid, {$pull: {requests: user._id}})
         await User.findByIdAndUpdate(user._id, {$pull: {pending: req.params.friendid}})
+        return res.json({message: 'Friend request deleted'})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Unable to access database'})
@@ -283,10 +313,11 @@ exports.rescindReq = async (req, res, next) => {
 }
 
 exports.delFriend = async (req, res, next) => {
-    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    try {  
-        await User.findByIdAndUpdate(req.params.friendid, {$pull: {requests: user._id}}).exec()
-        await User.findByIdAndUpdate(user._id, {$pull: {friends: req.params.friendid}})
+    try { 
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'}) 
+        const updateFriend = await User.findByIdAndUpdate(req.params.friendid, {$pull: {friends: user._id}}).exec()
+        const updateMe = await User.findByIdAndUpdate(user._id, {$pull: {friends: req.params.friendid}}).exec()
+        if (!updateMe || !updateFriend) return res.status(500).json({message: 'One or both users were unable to be updated'})
         return res.json({message: 'Friends list updated'})
     } catch(err) {
         console.error(err)
@@ -295,16 +326,16 @@ exports.delFriend = async (req, res, next) => {
 }
 
 exports.acceptFriend = async (req, res, next) => {
-    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    const {friendid} = req.params
     try {
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+        const {friendid} = req.params    
         await User.findByIdAndUpdate(user._id, 
             {
               $pull: {requests: friendid}, 
-              $push: {friendList: friendid}
+              $push: {friends: friendid}
             }).exec()
         await User.findByIdAndUpdate(friendid, {
-            $push: {friendList: user._id},
+            $push: {friends: user._id},
             $pull: {pending: user._id}
         })
         return res.json({message: 'Friend request accepted'})
@@ -315,10 +346,9 @@ exports.acceptFriend = async (req, res, next) => {
 }
 
 exports.uploadIcon = async (req, res, next) => {
-    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    if (!user) return res.status(403).json({message: "Access denied"})
-
     try {
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+        if (!user) return res.status(403).json({message: "Access denied"})
         upload.single(user.username)
         const icon = {
             data: fs.readFileSync(path.join(__dirname + '/icons/' + req.file.filename)),
@@ -334,26 +364,42 @@ exports.uploadIcon = async (req, res, next) => {
 }
 
 exports.userDetail = async (req, res, next) => {
-    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    if (!user) return res.status(403).json({message: "Access denied"})
     try {
-        const myUser = await User.findById(req.params.userid, {username: 1, friends: 1, posts: 1, icon: 1})
-          .populate({
-            path: 'friends',
-            select: 'username icon'
-          })
+        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+        //if (!user) return res.status(403).json({message: "Access denied"})
+        const myUser = await User.findById(req.params.userid, {_password: 0, requests: 0, pending: 0, inbox: 0})
           .populate({
             path: 'posts',
-            populate: {
-                path: 'author comments',
-                populate: {
-                    path: 'posts.comments.author'
+            populate: [
+                    {
+                    path: 'author',
+                    select: 'username'
+                },
+                {
+                    path: 'comments',
+                    populate: {
+                        path: 'author',
+                        select: 'username'
+                    }
                 }
-            }
-
+            ]
           })
+          .lean()
           .exec()
         if (!myUser) return res.status(400).json({message: 'User not found'})
+        if (!myUser.friends.includes(user._id)) {
+            const hiddenUser = {
+                ...myUser,
+                userDetails: {
+                    fullName: 'hidden',
+                    birthdate: 'hidden',
+                    email: 'hidden'  
+                }
+            }
+            console.log(hiddenUser)
+            return res.json(hiddenUser)    
+        }
+        console.log(myUser)
         return res.json(myUser)
     } catch(err) {
         console.error(err)

@@ -12,10 +12,10 @@ router.post('/login', userController.login)
 router.post('/icon', userController.uploadIcon)
 
 //userlist
-router.get('/userlist', userController.userList)
+router.get('/users/list', userController.userList)
 
 //home page
-router.get('/home', userController.accountPage)
+//router.get('/home', userController.accountPage)
 
 //friends list
 router.get('/friends', userController.friendList)
@@ -29,18 +29,18 @@ router.put('/accept/:friendid', userController.acceptFriend)
 //account
 router.get('/account', userController.accountPage)
 //edit
-router.put('/account/', userController.editAcct)
+router.put('/account', userController.editAcct)
 //link google
 router.get('/google', userController.googleAuth)
 
-//user detail page
-router.get('/:userid', userController.userDetail)
 
 //send/update icon
 router.put('/icon/edit', userController.editIcon)
 router.get('/icon', userController.sendIcon)
 router.get('/icon/:id', userController.sendUserIcon)
 
+//user detail page
+router.get('/:userid', userController.userDetail)
 
 
 module.exports = router;

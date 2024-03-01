@@ -54,7 +54,7 @@ exports.editPost = [
             title,
             content
         }
-        const myPost = Posts.findByIdAndUpdate(req.params.postid, update, {new: true}).exec()
+        const myPost = await Posts.findByIdAndUpdate(req.params.postid, update, {new: true}).exec()
         if (!myPost) return res.status(401).json({message: 'Post not found'})
         return res.json({message: 'Editted sucessfully', post: myPost})
     } catch(err) {
@@ -67,8 +67,10 @@ exports.editPost = [
 exports.delPost = async (req, res, next) => {
     try {
         const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-        await Posts.findByIdAndDelete(req.params.postid)
+        const myPost = await Posts.findOneAndDelete({_id: req.params.postid, author: myUser._id}).exec()
+        if (!myPost) return res.status(401).json({message: 'Post could not be found or user/credentials mismatch'})
         await User.findByIdAndUpdate(myUser._id, {$pull: {posts: req.params.postid}}).exec()
+        return res.json({message: 'Post deleted'})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Failed to delete post'})
@@ -79,6 +81,7 @@ exports.likePost = async (req, res, next) => {
     try {
         const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
         await Posts.findByIdAndUpdate(req.params.postid, {$push: {likes: myUser._id}}).exec()
+        return res.json({message: 'Like sent'})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Failed to send like'})
@@ -89,6 +92,7 @@ exports.removeLike = async (req, res, next) => {
     try {
         const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
         await Posts.findByIdAndUpdate(req.params.postid, {$pull: {likes: myUser._id}}).exec()
+        return res.json({message: 'Like removed :('})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Failed to remove like'})
@@ -126,25 +130,25 @@ exports.postList = async (req, res, next) => {
     //want to prioritize friends posts
     //will show top or recents interspersed with friends recent posts
     const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    const sorting = req.param.sorting === 'top' ? {likes: -1} : {date: -1}
-    const list = Posts.find({})
+    const sorting = req.params.sorting === 'top' ? {'likes': -1} : {'date': -1}
+    const list = await Posts.find({})
       .populate({
         path: 'comments',
         populate: {
             path: 'author',
             model: 'userModel',
-            select: 'username',
+            select: 'username icon',
         },
         perDocumentLimit: 5
       })
       .populate({
         path: 'author',
-        select: 'username'
+        model: 'userModel',
+        select: 'username icon'
       })
       .limit(10)
       .sort(sorting)
       .exec()
-    
     //find friend's posts
     let params = []
     if (myUser.friends) {

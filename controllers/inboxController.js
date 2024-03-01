@@ -3,19 +3,26 @@ const Inbox = require('../models/inboxModel')
 const jwt = require('jsonwebtoken')
 const {body, validationResult} = require('express-validator')
 
-const verify = () => jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+const verify = (token) => jwt.verify(token, process.env.SECRET, {issuer: 'CB'})
 
 exports.inboxList = async (req, res, next) => {
     try {
-        const user = verify()
-        const messages = await Users.findById(user._id, {inbox: 1})
+        const user = verify(req.token)
+        console.log(user)
+        const userInbox = await Users.findById(user._id, {inbox: 1})
           .populate({
             path: 'inbox',
             options: {sort: {date: -1}},
-            populate: 'from'
+            populate: {
+                path: 'from',
+                model: 'userModel',
+                select: 'username icon'
+            }
           })
           .lean()
           .exec()
+        console.log(userInbox.inbox)
+        const messages = userInbox.inbox
         if (messages.length < 1) return res.json({message: 'Inbox empty!'})
     
         //will filter into seen and unseen on client end
@@ -29,28 +36,34 @@ exports.inboxList = async (req, res, next) => {
 
 exports.messageDetail = async (req, res, next) => {
 
+    //async function
 
-    async function messageChain(_id, userid) {
+
+    async function messageChain(_id, userid, found = false) {
         const message = await Inbox.findOne({_id, $or: [{to: userid}, {from: userid}]})
           .lean()
           .exec()
         //not found
         if (!message) return null
         //go to head first
-        if (message.head) return messageChain(message.head, userid)
+        if (message.head && found === false) return await messageChain(message.head, userid)
         //reaching the end of the chain
         if (!message.tail) return [message]
         //follow the tail
-        return [message].concat(messageChain(message.tail, userid))
+        console.log(message.tail)
+        const next = await messageChain(message.tail, userid, true)
+        console.log(next)
+        return [message].concat(next)
     }
 
 
 
     try {
-        const user = verify()
+        const user = verify(req.token)
+        console.log(user)
         //const target = Inbox.findOne({_id: req.params.inboxid, to: user._id}).lean().exec()
-        const chain = messageChain(req.params.inboxid, user._id)
-    
+        const chain = await messageChain(req.params.inboxid, user._id)
+        console.log(chain)
         if (!chain) return res.status(400).json({message: 'Access denied'})
         //chain should be an array with target[0] == the first message in a message chain
         return res.json(chain)
@@ -62,9 +75,9 @@ exports.messageDetail = async (req, res, next) => {
 
 
 exports.findTo = async (req, res, next) => {
-    const user = verify()
-
+    //pulls up the most recent message when clicking on a friend/user's page
     try {
+        const user = verify(req.token)
         const allMsgs = await Inbox.find({to: req.params.to, from: user._id}).sort({date: -1}).exec()
         const msg = allMsgs.shift()
         if (!msg) {
@@ -114,7 +127,7 @@ exports.sendMsg = [
 
 exports.markRead = async (req, res, next) => {
     try {
-        const user = verify()
+        const user = verify(req.token)
         const msg = await Inbox.findOneAndUpdate({_id: req.params.inboxid, to: user._id}, {seen: true}, {new: true}).exec()
         if (!msg) return res.status(401).json({message: 'Item not found'})
         //await Users.findOneAndUpdate({_id: user._id}, {$pull: {inbox: req.params.inboxid}})
@@ -127,7 +140,7 @@ exports.markRead = async (req, res, next) => {
 
 exports.delMsg = async (req, res, next) => {
     try {
-        const user = verify()
+        const user = verify(req.token)
         //should someone be able to delete a message off the server? maybe just hide it
         const msg = await Inbox.findOneAndDelete({_id: req.params.inboxid, to: user._id}).exec()
         if (!msg) return res.status(401).json({message: 'Access denied'})

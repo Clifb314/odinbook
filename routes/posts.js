@@ -24,3 +24,5 @@ router.put('/:postid/down', postController.removeLike)
 
 //post details
 router.get('/:postid', postController.postDetail)
+
+module.exports = router;
