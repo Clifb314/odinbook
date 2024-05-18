@@ -20,7 +20,9 @@ const storage = multer.diskStorage({
   }
 })
 
+
 const upload = multer({storage})
+
 
 
 exports.login = [
@@ -105,7 +107,7 @@ exports.accountPage = async (req, res, next) => {
 
         } catch(err) {
             console.error(err)
-            return res.status(500).json({message: 'Unable to access database'})
+            return res.status(500).json({message: 'Unable to access database', err})
         }
 }
 
@@ -279,8 +281,9 @@ exports.addFriend = async (req, res, next) => {
     try { 
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'}) 
         //await User.findByIdAndUpdate(user._id, {$push: {friendList: req.params.friendid}}).exec()
-        await User.findByIdAndUpdate(req.params.friendid, {$push: {requests: user._id}}).exec()
-        await User.findByIdAndUpdate(user._id, {$push: {pending: req.params.friendid}})
+        await User.findOneAndUpdate({_id: req.parmas.friendid, requests: {$nin: user._id}}, {$push: {requests: user._id}}).exec()
+        //await User.findByIdAndUpdate(req.params.friendid, {$push: {requests: user._id}}).exec()
+        await User.findOneAndUpdate({_id: user._id, pending: {$nin: req.params.friendid}}, {$push: {pending: req.params.friendid}})
         return res.json({message: 'Friends request sent'})
     } catch(err) {
         console.error(err)
@@ -329,12 +332,22 @@ exports.acceptFriend = async (req, res, next) => {
     try {
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
         const {friendid} = req.params    
-        await User.findByIdAndUpdate(user._id, 
+        await User.findOneAndUpdate(
+            {
+                _id: user._id,
+                friends: {$nin: friendid}
+            }, 
             {
               $pull: {requests: friendid}, 
               $push: {friends: friendid}
             }).exec()
-        await User.findByIdAndUpdate(friendid, {
+
+        await User.findOneAndUpdate(
+            {
+                _id: friendid,
+                friends: {$nin: user._id}
+            }, 
+            {
             $push: {friends: user._id},
             $pull: {pending: user._id}
         })

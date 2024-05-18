@@ -10,7 +10,7 @@ router.post('/send', inboxController.sendMsg)
 
 //to find message chain from a friend's page
 //use query
-router.get('/find/:to', inboxController.findTo)
+router.get('/find', inboxController.findTo)
 
 
 //mark seen

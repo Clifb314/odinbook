@@ -23,6 +23,7 @@ const localStrat = require('passport-local').Strategy
 const jwtStrat = require('passport-jwt').Strategy
 const extractJWT = require('passport-jwt').ExtractJwt
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 
 passport.use(new localStrat(async (username, password, done) => {
@@ -115,6 +116,19 @@ app.use(function(req, res, next) {
     req.token = tokenArr[1]
   }
   next()
+})
+
+app.use(async function(req, res, next) {
+  try {
+    const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+    console.log(user)
+    req.userPayload = user
+    next()
+  } catch(err) {
+    console.log('Caught expired token')
+    req.token = null
+    next()
+  }
 })
 
 

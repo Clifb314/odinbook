@@ -78,8 +78,9 @@ exports.findTo = async (req, res, next) => {
     //pulls up the most recent message when clicking on a friend/user's page
     try {
         const user = verify(req.token)
-        const allMsgs = await Inbox.find({to: req.params.to, from: user._id}).sort({date: -1}).exec()
+        const allMsgs = await Inbox.find({to: req.query.friendid, from: user._id}).sort({date: -1}).exec()
         const msg = allMsgs.shift()
+        console.log(msg)
         if (!msg) {
             return res.json({new: true})
         } else return res.json(msg)    

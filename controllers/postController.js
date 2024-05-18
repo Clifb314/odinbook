@@ -18,6 +18,7 @@ exports.createPost = [
       }
       const {title, content} = req.body
       try {
+          if (!req.token) return res.status(403).json({message: 'Access denied', err: 'Token invalid/expired'})
           const author = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
           const newPost = new Posts({
               author,
@@ -66,6 +67,7 @@ exports.editPost = [
 
 exports.delPost = async (req, res, next) => {
     try {
+      if (!req.token) return res.status(403).json({message: 'Access denied', err: 'Token invalid/expired'})
         const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
         const myPost = await Posts.findOneAndDelete({_id: req.params.postid, author: myUser._id}).exec()
         if (!myPost) return res.status(401).json({message: 'Post could not be found or user/credentials mismatch'})
@@ -79,9 +81,10 @@ exports.delPost = async (req, res, next) => {
 
 exports.likePost = async (req, res, next) => {
     try {
-        const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-        await Posts.findByIdAndUpdate(req.params.postid, {$push: {likes: myUser._id}}).exec()
-        return res.json({message: 'Like sent'})
+      if (!req.token) {return res.status(403).json({message: 'Access denied', err: 'Token invalid/expired'})}
+      const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+      await Posts.findByIdAndUpdate(req.params.postid, {$push: {likes: myUser._id}}).exec()
+      return res.json({message: 'Like sent'})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Failed to send like'})
@@ -90,9 +93,10 @@ exports.likePost = async (req, res, next) => {
 
 exports.removeLike = async (req, res, next) => {
     try {
-        const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-        await Posts.findByIdAndUpdate(req.params.postid, {$pull: {likes: myUser._id}}).exec()
-        return res.json({message: 'Like removed :('})
+      if (!req.token) {return res.status(403).json({message: 'Access denied', err: 'Token invalid/expired'})}
+      const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+      await Posts.findByIdAndUpdate(req.params.postid, {$pull: {likes: myUser._id}}).exec()
+      return res.json({message: 'Like removed :('})
     } catch(err) {
         console.error(err)
         return res.status(500).json({message: 'Failed to remove like'})
@@ -127,10 +131,33 @@ exports.postDetail = async (req, res, next) => {
 
 exports.postList = async (req, res, next) => {
   try {
+    const sorting = req.params.sorting === 'top' ? {'likes': -1} : {'date': -1}
     //want to prioritize friends posts
     //will show top or recents interspersed with friends recent posts
+    if (!req.token) {
+      const list = await Posts.find({})
+      .populate({
+        path: 'comments',
+        populate: {
+            path: 'author',
+            model: 'userModel',
+            select: 'username icon',
+        },
+        perDocumentLimit: 5
+      })
+      .populate({
+        path: 'author',
+        model: 'userModel',
+        select: 'username icon'
+      })
+      .limit(10)
+      .sort(sorting)
+      .exec()
+
+      return res.json(list)
+    }
     const myUser = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    const sorting = req.params.sorting === 'top' ? {'likes': -1} : {'date': -1}
+    console.log(myUser)
     const list = await Posts.find({})
       .populate({
         path: 'comments',
@@ -195,6 +222,10 @@ exports.postList = async (req, res, next) => {
  
   } catch(err) {
     console.error(err)
-    return res.status(500).json({message: 'Unable to access database'})
+    if (err.TokenExpiredError) return res.status(403).json({
+      message: `token expired at ${err.expiredAt}`,
+      forceLogOut: true,
+    })
+    else return res.status(500).json({message: 'Unable to access database'})
   }
 }
