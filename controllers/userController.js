@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 const { body, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
-const uuid = require('uuidv4').uuid
+const uuid = require('uuid').v4
 const fs = require('node:fs/promises')
 
 
@@ -13,10 +13,11 @@ const multer = require('multer');
 const path = require('node:path');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'icons')
+    cb(null, './icons')
   },
   filename: (req, file, cb) => {
-    cb(null, uuid())
+    const extension = file.originalname.split('.')
+    cb(null, req.userPayload._id + '-icon' + '.' + extension[1])
   }
 })
 
@@ -30,6 +31,13 @@ exports.login = [
     body('password').trim().escape(),
 
     async (req, res, next) => {
+
+        //tmp pw fix
+        const hashedPW = await bcrypt.hash(req.body.password, 10)
+        console.log(`Try this: ${hashedPW}`)
+        //tmp end
+
+
         passport.authenticate('local', {session: false}, (err, user) => {
             if (err || !user) {
                 return res.status(401).json({err, message: 'Incorrect username or password'})
@@ -126,9 +134,10 @@ exports.editIcon = [
             //If an icon already exists, delete the old one
             try{
                 await fs.unlink(path.join(__dirname, 'icons', myUser.icon))
-                myUser.icon = req.filename
+                myUser.icon = req.file.filename
                 await myUser.save()
                 console.log(`updated icon for ${myUser.username}`)
+                return res.json({message: 'Icon updated', update: myUser.icon})
             } catch(err) {
                 console.log(`failed to updated icon for ${myUser.username}`)
                 console.error(err)
@@ -138,6 +147,7 @@ exports.editIcon = [
         } else {
             myUser.icon = req.file.filename
             await myUser.save()
+            return res.status(201).json({message: `Icon saved`, update: myUser.icon})
         }
     }
 
@@ -150,21 +160,28 @@ exports.sendIcon = async (req, res, next) => {
     if (!myUser) return res.status(500).json({message: 'User not found'})
     if (!myUser.icon) return res.json({icon: null})
 
+    const resolvedPath = path.resolve('./icons', myUser.icon)
+    console.log(resolvedPath)
+
     res.sendFile(
-        path.join(__dirname, myUser.icon)
+        resolvedPath
+        //path.join(__dirname, myUser.icon)
+        
     )
 }
 
 exports.sendUserIcon = async (req, res, next) => {
     try {
         if (!req.params.id) return res.json({message: 'User id missing'})
-        const user = await User.findById(req.parmas.id, {icon: 1}).exec()
+        const user = await User.findById(req.params.id, {icon: 1}).exec()
         if (!user || !user.icon) return res.status(500).json({message: 'User not found or icon blank'})
         
         res.sendFile(
-            path.join(__dirname, user.icon)
+            path.resolve('./icons', user.icon)
+            //path.join(__dirname, user.icon)
         )
     } catch(err) {
+        console.log(err)
         return res.status(500).json(err)
     }
 
@@ -190,13 +207,13 @@ exports.editAcct = [
     .isLength({ min: 3 })
     .isAlpha()
     .withMessage("No Special Characters"),
-  body("lName", "Last name must be at leasst 3 characters")
+  body("lName", "Last name must be at least 3 characters")
     .trim()
     .escape()
     .isAlpha()
     .isLength({min: 3})
     .withMessage("No Special characters"),
-    body("bday", "Please enter a valid date")
+    body("birthdate", "Please enter a valid date")
     .isDate(),
   body('password').trim().escape(),
   body('checkPW').trim().escape().custom((value, {req}) => {
@@ -209,15 +226,18 @@ exports.editAcct = [
         if (!errors.isEmpty()) return res.status(400).json({message: 'Validation errors', errors: errors.array()})
 
         try {
-            const {username, email, fName, lName, bday, password, checkPW, oldPW} = req.body
+            const {username, email, fName, lName, birthdate, password, checkPW, oldPW} = req.body
             const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-            const target = User.findById(user._id).exec()
+            const target = await User.findById(user._id).exec()
             if (!target) return res.json({message: 'Access denied or User not found'})
-            const match = bcrypt.compare(oldPW, target._password)
-            if (!match) return res.json({message: 'Incorrect password'})
+            const match = bcrypt.compare(oldPW, target._password, (err, result) => {
+                if (err) throw new Error(err)
+                else return result        
+            })
+            if (!match) return res.json({message: 'Unable to verify account'})
             let updatePW
             if (password.length < 1) {
-                updatePW = oldPW
+                updatePW = target._password
             } else {
                 updatePW = await bcrypt.hash(password, 10)
             }
@@ -226,7 +246,7 @@ exports.editAcct = [
                 _password: updatePW,
                 userDetails: {
                     fullName: fName + ' ' + lName,
-                    birthdate: bday,
+                    birthdate,
                     email,
                 }
             }
@@ -358,23 +378,6 @@ exports.acceptFriend = async (req, res, next) => {
     }
 }
 
-exports.uploadIcon = async (req, res, next) => {
-    try {
-        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-        if (!user) return res.status(403).json({message: "Access denied"})
-        upload.single(user.username)
-        const icon = {
-            data: fs.readFileSync(path.join(__dirname + '/icons/' + req.file.filename)),
-            contentType: 'image/png'
-        }
-        await User.findByIdAndUpdate(user._id, icon).exec()
-        res.json({message: 'Upload successful'})
-
-    } catch(err) {
-        console.error(err)
-        res.status(500).json({message: 'Failed to upload image'})
-    }
-}
 
 exports.userDetail = async (req, res, next) => {
     try {
@@ -394,26 +397,36 @@ exports.userDetail = async (req, res, next) => {
                         path: 'author',
                         select: 'username'
                     }
-                }
+                },
             ]
           })
-          .lean()
+          .populate({
+            path: 'friends',
+            select: 'username'
+          })
           .exec()
+
         if (!myUser) return res.status(400).json({message: 'User not found'})
-        if (!myUser.friends.includes(user._id)) {
+        const list = [...myUser.friends]
+
+        const friended = list.find(friend => friend._id.toString() === user._id)
+
+        const testVirtual = myUser.toJSON({virtuals: true})
+
+        if (!friended) {
             const hiddenUser = {
-                ...myUser,
+                ...testVirtual,
+                getAge: 'hidden',
                 userDetails: {
                     fullName: 'hidden',
                     birthdate: 'hidden',
-                    email: 'hidden'  
+                    email: 'hidden',
+                    age: 'hidden'
                 }
             }
-            console.log(hiddenUser)
             return res.json(hiddenUser)    
-        }
-        console.log(myUser)
-        return res.json(myUser)
+        } else return res.json(testVirtual)
+
     } catch(err) {
         console.error(err)
         res.status(500).json({message: 'Failed to access database'})

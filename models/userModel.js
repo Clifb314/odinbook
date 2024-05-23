@@ -22,7 +22,7 @@ const userSchema = new Schema({
     inbox: [{type: Schema.Types.ObjectId, ref: 'inboxModel'}],
 }, {toJSON: {virtuals: true}})
 
-userSchema.virtual('age').get(function() {
+userSchema.virtual('getAge').get(function() {
     const today = new Date()
     const year = today.getFullYear()
     const month = today.getMonth()

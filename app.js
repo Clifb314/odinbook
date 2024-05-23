@@ -150,10 +150,12 @@ app.use(function(err, req, res, next) {
 // set locals, only providing error in development
 res.locals.message = err.message;
 res.locals.error = req.app.get('env') === 'development' ? err : {};
+console.log(err.message)
 
-// render the error page
+// render the error page || this is a server, so return error message/json
 res.status(err.status || 500);
-res.render('error');
+res.json({err})
+//res.render('error');
 });
 
 app.listen(process.env.PORT || 5000, () => {
