@@ -9,7 +9,7 @@ const userController = require('../controllers/userController')
 router.post('/login', userController.login)
 
 //upload icon
-router.post('/icon', userController.uploadIcon)
+//router.post('/icon', userController.uploadIcon)
 
 //userlist
 router.get('/users/list', userController.userList)

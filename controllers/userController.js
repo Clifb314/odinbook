@@ -230,11 +230,9 @@ exports.editAcct = [
             const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
             const target = await User.findById(user._id).exec()
             if (!target) return res.json({message: 'Access denied or User not found'})
-            const match = bcrypt.compare(oldPW, target._password, (err, result) => {
-                if (err) throw new Error(err)
-                else return result        
-            })
-            if (!match) return res.json({message: 'Unable to verify account'})
+            console.log(oldPW)
+            const match = await bcrypt.compare(oldPW, target._password)
+            if (!match) return res.status(401).json({err: 'Unable to verify account'})
             let updatePW
             if (password.length < 1) {
                 updatePW = target._password
@@ -251,7 +249,7 @@ exports.editAcct = [
                 }
             }
 
-            const push = User.findByIdAndUpdate(user._id, update, {new: true}).exec()
+            const push = await User.findByIdAndUpdate(user._id, update, {new: true}).exec()
             return res.json(push)
         } catch(err) {
             console.error(err)

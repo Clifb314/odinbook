@@ -121,7 +121,6 @@ app.use(function(req, res, next) {
 app.use(async function(req, res, next) {
   try {
     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-    console.log(user)
     req.userPayload = user
     next()
   } catch(err) {
