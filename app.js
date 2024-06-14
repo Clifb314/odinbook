@@ -41,6 +41,10 @@ passport.use(new localStrat(async (username, password, done) => {
       path: 'pending',
       select: 'icon username'
     })
+    .populate({
+      path: 'inbox',
+      select: 'seen'
+    })
     .exec()
     if (!myUser) return done(null, false, 'User not found')
 

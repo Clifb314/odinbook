@@ -32,12 +32,6 @@ exports.login = [
 
     async (req, res, next) => {
 
-        //tmp pw fix
-        const hashedPW = await bcrypt.hash(req.body.password, 10)
-        console.log(`Try this: ${hashedPW}`)
-        //tmp end
-
-
         passport.authenticate('local', {session: false}, (err, user) => {
             if (err || !user) {
                 return res.status(401).json({err, message: 'Incorrect username or password'})
