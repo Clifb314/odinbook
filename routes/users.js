@@ -1,5 +1,5 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 const userController = require('../controllers/userController')
 
 /* GET users listing. */
@@ -32,6 +32,7 @@ router.get('/account', userController.accountPage)
 router.put('/account', userController.editAcct)
 //link google
 router.get('/google', userController.googleAuth)
+router.get('/oauth2/redirect/google', userController.googleRedirect)
 
 
 //send/update icon

@@ -38,13 +38,14 @@ exports.inboxList = async (req, res, next) => {
     return res.json(messages);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Could not access database" });
+    return res.status(500).json({ message: "Could not access database", err });
   }
 };
 
 exports.messageDetail = async (req, res, next) => {
   //async function
-
+  //generate message chain recursively
+  //how does this handle message chains w/ a title?
   async function messageChain(_id, userid, found = false) {
     const message = await Inbox.findOne({
       _id,
@@ -86,12 +87,20 @@ exports.findTo = async (req, res, next) => {
   //pulls up the most recent message when clicking on a friend/user's page
   try {
     const user = verify(req.token);
-    const allMsgs = await Inbox.find({ to: req.query.friendid, from: user._id })
+    const allMsgs = await Inbox.find({ from: req.query.friendid, to: user._id })
+      .populate({
+        path: 'to from',
+        select: 'username icon',
+        model: "userModel"
+      })
       .sort({ date: -1 })
       .exec();
     const msg = allMsgs.shift();
     if (!msg) {
-      return res.json({ new: true });
+      const friendInfo = await Users.findById(req.query.friendid, {username: 1, icon: 1}).exec()
+      if (!friendInfo) return res.status(500).json({message: 'Could not find user in database'})
+      console.log(friendInfo)
+      return res.json({ new: true, friendInfo });
     } else return res.json(msg);
   } catch (err) {
     console.error(err);
@@ -128,7 +137,8 @@ exports.sendMsg = [
       await newMsg.save();
       newMsg.populate({
         path: 'to from',
-        select: 'username icon'
+        select: 'username icon',
+        model: 'userModel'
       })
       //update head/parent, remove from inbox
       if (head) {
@@ -146,6 +156,7 @@ exports.sendMsg = [
       await Users.findByIdAndUpdate(from, {
         $push: { inbox: newMsg._id },
       }).exec();
+      console.log(newMsg)
       return res.json(newMsg);
     } catch (err) {
       console.error(err);
@@ -166,6 +177,7 @@ exports.markRead = async (req, res, next) => {
       { new: true }
     ).exec();
     if (!msg) return res.status(401).json({ message: "Item not found" });
+    //Don't pull from inbox, let client side organize seen and unseen msgs
     //await Users.findOneAndUpdate({_id: user._id}, {$pull: {inbox: req.params.inboxid}})
     return res.json({ message: "Status updated" });
   } catch (err) {

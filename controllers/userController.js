@@ -57,27 +57,59 @@ exports.login = [
 
 exports.googleAuth = async (req, res, next) => {
     //i think this has to go in passport.use in app.js. will review
-    try {
-        const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
-        if (!user) return res.status(401).json({message: 'Must be logged in to link google account'})    
-    } catch(err) {
-        return res.status(500).json({message: 'Access denied'})
-    }
-    passport.authenticate('google', {scope: ['profile'], session: false}, async (err, profile) => {
-        if (err || !profile) return res.status(401).json({
-            err,
-            message: 'Google account not found'
-        })
-        console.log(profile)
-        const update = {
-            displayName: profile.displayName,
-            id: profile.id,
-            coverPhoto: profile.coverPhoto
+    // try {
+    //     const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
+    //     console.log(user)
+    //     //if (!user) return res.status(401).json({message: 'Must be logged in to link google account'})
+        passport.authenticate('google', {scope: ['profile', 'email'], prompt: 'select_account', session: false}, 
+           
+           
+           
+            // async (err, profile) => {
+            //     console.log('trying google auth')
+            //     console.log(profile)
+            //     if (err || !profile) return res.status(401).json({
+            //         err,
+            //         message: 'Google account not found'
+            //     })
+            //     const update = {
+            //         displayName: profile.displayName,
+            //         id: profile.id,
+            //         coverPhoto: profile.coverPhoto
+            //     }
+            //     const myUser = await User.findByIdAndUpdate(user._id, {googleAcct: update}, {new: true}).exec()
+            //     if (!myUser) return res.json(update)
+            //     return res.json(myUser)
+            // }
+            async (err, profile) => {
+                if (err) return res.status(401).json({err, message: 'Could not authenticate'})
+                //update account here ?
+                console.log(profile)
+                const token = req.token ? req.token : null
+                return res.json({profile, token})
+
+            }
+        )(req, res, next)
+    // } catch(err) {
+    //     return res.status(500).json({err, message: 'Access denied'})
+    // }
+
+}
+
+
+exports.googleRedirect = async (req, res, next) => {
+    passport.authenticate('google', {scope: ['email', 'profile'], session: false},
+        async (req, res) => {
+            if (!req.profile) res.redirect('/account')
+            try {
+                
+                
+            } catch(err) {
+
+            }
+        
         }
-        const myUser = await User.findByIdAndUpdate(user._id, {googleAcct: update}, {new: true}).exec()
-        if (!myUser) return res.json(update)
-        return res.json(myUser)
-    })
+    )
 }
 
 
@@ -176,7 +208,7 @@ exports.sendUserIcon = async (req, res, next) => {
         )
     } catch(err) {
         console.log(err)
-        return res.status(500).json(err)
+        return res.status(500).json({err, message: 'Failed to get icon'})
     }
 
 }
@@ -293,7 +325,7 @@ exports.addFriend = async (req, res, next) => {
     try { 
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'}) 
         //await User.findByIdAndUpdate(user._id, {$push: {friendList: req.params.friendid}}).exec()
-        await User.findOneAndUpdate({_id: req.parmas.friendid, requests: {$nin: user._id}}, {$push: {requests: user._id}}).exec()
+        await User.findOneAndUpdate({_id: req.params.friendid, requests: {$nin: user._id}}, {$push: {requests: user._id}}).exec()
         //await User.findByIdAndUpdate(req.params.friendid, {$push: {requests: user._id}}).exec()
         await User.findOneAndUpdate({_id: user._id, pending: {$nin: req.params.friendid}}, {$push: {pending: req.params.friendid}})
         return res.json({message: 'Friends request sent'})

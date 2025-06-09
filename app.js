@@ -9,7 +9,8 @@ require('dotenv').config()
 //mongoose setup
 const mongoose = require('mongoose')
 const myDB = process.env.MONGODB
-mongoose.connect(myDB, {useUnifiedTopology: true, useNewUrlParser: true})
+const depreciatedDBopts = {useUnifiedTopology: true, useNewUrlParser: true}
+mongoose.connect(myDB)
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'mongo connection error'))
 
@@ -17,7 +18,7 @@ db.on('error', console.error.bind(console, 'mongo connection error'))
 //passport setup
 const User = require('./models/userModel')
 const passport = require('passport')
-const gStrat = require('passport-google-oidc').Strategy
+const gStrat = require('passport-google-oauth20').Strategy
 const fbStrat = require('passport-facebook').Strategy
 const localStrat = require('passport-local').Strategy
 const jwtStrat = require('passport-jwt').Strategy
@@ -65,13 +66,27 @@ passport.use(
   new gStrat({
     clientID: process.env.gClientID,
     clientSecret: process.env.gSECRET,
-    callbackURL: '/oauth2/redirect/google',
-    scope: ['profile'],
-    // 'http://localhost:3001/auth/google/callback',
+    callbackURL: '/api/auth/oauth2/redirect/google',
+    scope: ['profile', 'email'],
+    // 'http://localhost:3001/api/auth/oauth2/redirect/google',
     passReqToCallback: true
     },
-    function (accessToken, refreshToken, profile, done) {
-      return done(null, profile)
+    async function (accessToken, refreshToken, profile, done) {
+      console.log('strat triggered')
+      console.log(req.userPayload)
+      try {
+        const findUser = User.findOne({username: {$in: [profile.displayName, req.userPayload]}}).exec()
+        if (findUser) {
+          //update account here
+
+          
+        }
+        console.log(findUser)
+        console.log(profile)
+        return done(null, profile)
+      } catch(err) {
+        return done(err, false)
+      }
   }
 ))
 
@@ -161,7 +176,7 @@ res.json({err})
 //res.render('error');
 });
 
-app.listen(process.env.PORT || 5000, () => {
+app.listen(process.env.PORT || 5001, () => {
 console.log(`Server started on port ${process.env.PORT || 5000}`);
 });
 

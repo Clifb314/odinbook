@@ -3,6 +3,22 @@ const {body, validationResult} = require('express-validator')
 const User = require('../models/userModel')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const fs = require('node:fs/promises')
+
+//multer setup for icon/file mgmt
+const multer = require('multer')
+const path = require('node:path')
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './icons')
+  },
+  filename: (req, file, cb) => {
+    const extension = file.originalname.split('.')
+    cb(null, req.userPayload._id + '-icon.' + extension[1])
+  }
+})
+
+const upload = multer({storage})
 
 
 exports.signup = [
@@ -99,6 +115,29 @@ exports.signup = [
 
 
     }
+]
+
+exports.signupIcon = [
+  //pass icon and user._id to update after signup finishes
+  
+
+  upload.single('icon'),
+
+  async (req, res, next) => {
+    console.log(req.body.userid)
+    try {
+      const user = User.findById(req.body.userid).exec()
+      if (!user) return res.status(500).json({err: 'Could not find user'})
+      user.icon = req.file.filename
+      await user.save()
+      return res.json({message: 'Icon saved'})
+    } catch(err) {
+      console.error(err)
+      return res.status(500).json({err, message: 'Failed to add icon'})
+    }
+
+  }
+  
 ]
 
 exports.guestHome = async (req, res, next) => {
