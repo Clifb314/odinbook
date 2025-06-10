@@ -331,7 +331,7 @@ exports.addFriend = async (req, res, next) => {
         return res.json({message: 'Friends request sent'})
     } catch(err) {
         console.error(err)
-        return res.status(500).json({message: 'Unable to update database'})
+        return res.status(500).json({message: 'Unable to update database', err})
     }
 }
 
@@ -343,7 +343,7 @@ exports.delReq = async (req, res, next) => {
         return res.json({message: 'Friend request denied'})
     } catch(err) {
         console.error(err)
-        return res.status(500).json({message: 'Unable to access database'})
+        return res.status(500).json({message: 'Unable to access database', err})
     }
 }
 
@@ -355,7 +355,7 @@ exports.rescindReq = async (req, res, next) => {
         return res.json({message: 'Friend request deleted'})
     } catch(err) {
         console.error(err)
-        return res.status(500).json({message: 'Unable to access database'})
+        return res.status(500).json({message: 'Unable to access database', err})
     }
 }
 
@@ -363,12 +363,12 @@ exports.delFriend = async (req, res, next) => {
     try { 
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'}) 
         const updateFriend = await User.findByIdAndUpdate(req.params.friendid, {$pull: {friends: user._id}}).exec()
-        const updateMe = await User.findByIdAndUpdate(user._id, {$pull: {friends: req.params.friendid}}).exec()
+        const updateMe = await User.findByIdAndUpdate(user._id, {$pull: {friends: req.params.friendid}}, {new: true}).exec()
         if (!updateMe || !updateFriend) return res.status(500).json({message: 'One or both users were unable to be updated'})
-        return res.json({message: 'Friends list updated'})
+        return res.json({message: 'Friends list updated', update: updateMe})
     } catch(err) {
         console.error(err)
-        return res.status(500).json({message: 'Unable to update database'})
+        return res.status(500).json({message: 'Unable to update database', err})
     }
 }
 
@@ -376,7 +376,7 @@ exports.acceptFriend = async (req, res, next) => {
     try {
         const user = jwt.verify(req.token, process.env.SECRET, {issuer: 'CB'})
         const {friendid} = req.params    
-        await User.findOneAndUpdate(
+        const update = await User.findOneAndUpdate(
             {
                 _id: user._id,
                 friends: {$nin: friendid}
@@ -384,7 +384,8 @@ exports.acceptFriend = async (req, res, next) => {
             {
               $pull: {requests: friendid}, 
               $push: {friends: friendid}
-            }).exec()
+            }, {new: true}).exec()
+            console.log(update)
 
         await User.findOneAndUpdate(
             {
@@ -395,10 +396,10 @@ exports.acceptFriend = async (req, res, next) => {
             $push: {friends: user._id},
             $pull: {pending: user._id}
         })
-        return res.json({message: 'Friend request accepted'})
+        return res.json({message: 'Friend request accepted', update})
     } catch(err) {
         console.error(err)
-        return res.status(500).json({message: 'Unable to update database'})
+        return res.status(500).json({message: 'Unable to update database', err})
     }
 }
 
