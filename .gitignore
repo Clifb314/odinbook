@@ -33,6 +33,7 @@ bower_components
 build/Release
 
 # Dependency directories
+client/node_modules/
 node_modules/
 jspm_packages/
 
@@ -60,5 +61,6 @@ typings/
 # next.js build output
 .next
 
-# icons, client
+# icons, material icons
 icons/
+client/src/MaterialIcons/

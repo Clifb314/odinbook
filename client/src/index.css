@@ -1,0 +1,1171 @@
+:root {
+  --boxShadow: 4px 2px 11px 0px rgba(0, 0, 0, 0.83);
+  --cardColor: rgb(172, 203, 243);
+  --logoFontColor: rgb(80, 16, 255);
+  --roundedCorner: 8px;
+  --notiAnimation: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Small screens */
+@media only screen and (max-width: 800px) {
+  div.header li {
+    font-size: 12px;
+  }
+
+  div.logo {
+    font-size: 18px;
+  }
+
+  .material-icons {
+    font-size: 12px;
+  }
+
+  div.accountPage {
+    flex-direction: column;
+  }
+
+  .feed.acct {
+    flex: 1;
+  }
+
+  div.icon {
+    height: 100px;
+    width: 100px;
+  }
+
+  div.userDetails h1 {
+    font-size: 18px;
+  }
+
+  div.userDetails h2 {
+    font-size: 16px;
+  }
+}
+
+@media only screen and (min-width: 801px) {
+  div.header li {
+    font-size: 24px;
+  }
+
+  div.logo {
+    font-size: 24px;
+  }
+
+  .material-icons {
+    font-size: 24px;
+  }
+
+  .feed.acct {
+    flex: 3;
+  }
+
+  div.icon {
+    height: 200px;
+    width: 200px;
+  }
+}
+
+/* Material Icons */
+
+.material-icons {
+  font-family: "Material Icons";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  cursor: pointer;
+
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Support for IE. */
+  font-feature-settings: "liga";
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+
+/* Main layout */
+div.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: rgb(202, 214, 218);
+}
+
+div.components,
+div.register {
+  display: flex;
+  flex: 1 0 auto;
+  justify-content: center;
+  align-items: center;
+}
+
+div.logoutWarning {
+  position: absolute;
+  background-color: white;
+  border-radius: var(--roundedCorner);
+  padding: 28px 22px;
+  top: 50%;
+  left: 50%;
+  z-index: 100;
+}
+
+div.logoutWarning > div {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+div.logoutWarning button {
+  display: inline;
+  width: 8rem;
+  padding: 4px;
+}
+
+/* Forms */
+form {
+  margin: 12px;
+  border-radius: var(--roundedCorner);
+  height: 25%;
+  width: 25%;
+  box-shadow: var(--boxShadow);
+  padding: 12px;
+  background-color: var(--cardColor);
+  display: flex;
+  flex-direction: column;
+  align-items: baseline;
+  justify-content: center;
+}
+
+label,
+input {
+  display: block;
+}
+
+label {
+  margin-bottom: 4px;
+}
+
+input {
+  width: min(80%, 300px);
+  height: max(12px, 2em);
+  border-radius: var(--roundedCorner);
+  padding: 8px;
+  margin-bottom: 6px;
+  border: 1px solid rgb(207, 207, 255);
+}
+
+/* Header */
+div.counter {
+  border-radius: 50%;
+  height: 2em;
+  width: 2em;
+  font-size: 10px;
+  color: white;
+  background-color: red;
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+div.header {
+  width: 100%;
+  height: 10vh;
+  border-bottom: 2px solid black;
+  position: relative;
+  padding: 12px;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+div.logo {
+  /*color: var(--logoFontColor); */
+  background: linear-gradient(320deg, rgb(223, 122, 223), blue);
+  background-clip: text;
+  color: transparent;
+  /*animation: logoFlicker 5s ease infinite;*/
+}
+
+/* linear-gradient is not really compatible with keyframes */
+@keyframes logoFlicker {
+  0% {
+    background: linear-gradient(140deg, purple, blue);
+    background-clip: text;
+    color: transparent;
+  }
+  50% {
+    background: linear-gradient(320deg, rgb(223, 122, 223), blue);
+    background-clip: text;
+    color: transparent;
+  }
+  100% {
+    background: linear-gradient(140deg, rgb(119, 2, 119), rgb(124, 124, 236));
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+div.header h1 {
+  margin: 0;
+}
+
+div.header a {
+  text-decoration: none;
+  cursor: pointer;
+  color: black;
+  font-weight: 700;
+}
+
+div.header li {
+  list-style-type: none;
+  display: inline-block;
+  transition: all ease-in-out 150ms;
+  padding: 10px;
+  position: relative;
+}
+
+div.header li + li {
+  border-left: 1px solid black;
+}
+
+div.header > ul > li:hover {
+  background-color: rgb(108, 108, 245);
+  color: white;
+  border: 1px solid white;
+}
+
+div.header li:hover a {
+  color: white;
+}
+
+div.header li:hover svg {
+  fill: white;
+}
+
+div.header ul {
+  padding: 0;
+  margin: 0;
+}
+
+/* mouseover friend requests */
+div.friendReqs,
+div.header > ul > li:hover > div.friendReqs {
+  z-index: 10;
+  position: absolute;
+  background-color: rgb(215, 216, 218);
+  box-shadow: var(--boxShadow);
+  padding: 6px;
+  height: fit-content;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(20em, 20vw);
+  bottom: auto;
+  color: black;
+  font-size: 14px;
+}
+
+ul.friendReqList li, ul.pendingReqs li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+ul.friendReqList > li > a:hover, ul.pendingReqs > li > a:hover {
+  font-style: italic;
+}
+
+div.friendReqs a,
+div.header > ul > li:hover > div.friendReqs a {
+  text-decoration: none;
+  cursor: pointer;
+  color: black;
+  font-size: 12px;
+  width: 80%;
+}
+
+div.friendReqs > p {
+  font-weight: 700;
+  font-size: 14px;
+  margin: 12px 0;
+}
+
+div.friendReqs li,
+div.header > ul > li:hover > div.friendReqs li {
+  list-style-type: none;
+  margin: 4px;
+  background-color: azure;
+  transition: all ease-in-out 100ms;
+  width: 80%;
+}
+
+div.friendReqs li:hover {
+  background-color: rgb(185, 190, 190);
+  color: black
+}
+
+/* Register */
+div.registerText {
+  flex: 1 0 auto;
+  text-align: center;
+}
+
+div.registerText h1 {
+  font-size: 24px;
+  color: rgb(80, 16, 255);
+}
+
+div.registerText p {
+  font-size: 18px;
+}
+
+form.registerForm {
+  width: min(50%, 500px);
+}
+
+/* buttons */
+button {
+  border-radius: 10px;
+  margin: 4px;
+  padding: 2px 0px;
+  cursor: pointer;
+  width: 60px;
+  border: 1px solid black;
+  transition: all ease-in-out 100ms;
+  font-weight: 700;
+  text-align: center;
+  display: inline-block;
+}
+
+button.circle {
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  padding: 0;
+}
+
+button.transparent {
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  text-align: center;
+  padding: 0;
+  font-weight: 700;
+}
+
+button.reject {
+  color: red;
+}
+
+button.accept {
+  color: rgb(13, 128, 13);
+}
+
+button.reject:hover {
+  animation: hop 200ms ease-in;
+  color: white;
+  background-color: red;
+}
+
+button.accept:hover {
+  animation: hop 200ms ease-in;
+  color: white;
+  background-color: rgb(13, 128, 13);
+}
+
+span + span {
+  margin: 0px 6px;
+}
+
+span.like-icon svg {
+  fill: black;
+}
+
+span.dislike-icon svg {
+  fill: red;
+}
+
+div.commentsSection svg {
+  height: 18px;
+  width: 18px;
+}
+
+span.refreshBtn svg {
+  fill: rgb(13, 128, 13);
+  position: absolute;
+  right: 5%;
+  top: 5%;
+  z-index: 10;
+}
+
+div.Btn-container {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+button.submitBtn {
+  color: white;
+  background-color: rgb(31, 156, 31);
+}
+
+form#popup-form button,
+form#popup-form p {
+  position: absolute;
+  bottom: 5%;
+  right: 5%;
+}
+
+form#popup-form > p {
+  font-style: italic;
+}
+
+div.closeBtn {
+  position: absolute;
+  top: 5%;
+  right: 5%;
+  font-size: 16px;
+  border-radius: 50%;
+  width: 2em;
+  height: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all ease-in 250ms;
+  cursor: pointer;
+}
+
+div.closeBtn:hover svg {
+  fill: red;
+}
+
+div.interactBtn {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* components display */
+div.components {
+  flex: 1;
+}
+
+/* Feed/posts */
+div.post-icon,
+div.default-icon {
+  border-radius: 50%;
+  overflow: hidden;
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+div.default-icon {
+  background-color: gray;
+  color: white;
+  font-weight: 700;
+  font-size: 24px;
+}
+
+div.post-icon img {
+  object-fit: cover;
+  height: auto;
+  width: 100px;
+  margin: 0 auto;
+  display: block;
+}
+
+div.feed {
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 300px));
+  gap: 12px;
+  overflow: auto;
+  padding: 6px;
+}
+
+@keyframes expandView {
+  from {
+    height: 0px;
+    opacity: 0;
+  }
+  to {
+    height: 100%;
+    opacity: 1;
+  }
+  
+}
+
+div.postCard {
+  padding: 6px;
+  text-align: left;
+  box-shadow: var(--boxShadow);
+  overflow: auto;
+  position: relative;
+  transition: all 5000ms ease-in-out;
+}
+
+div.postCard p {
+  margin: 4px;
+}
+
+div.postCard p.login {
+  text-align: right;
+}
+
+div.postCard p.postTitle {
+  font-weight: 700;
+}
+
+.toggleComments {
+  position: sticky;
+  bottom: 4px;
+  left: 4px;
+}
+
+span.showComments svg {
+  animation: spinDown 200ms linear;
+  transform-origin: center;
+  transform: rotate(0);
+}
+
+span.hideComments svg {
+  animation: spinBack 200ms linear;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+
+/* floating button */
+div.popup {
+  position: fixed;
+  bottom: 5%;
+  right: 5%;
+}
+
+div.form-container {
+  height: 100%;
+}
+
+form#popup-form {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 10px;
+  align-items: center;
+}
+
+form#popup-form > div {
+  width: 80%;
+}
+
+form#popup-form > input {
+  padding: 2px;
+  width: min(10em, 40%);
+}
+
+form#popup-form > textarea {
+  margin: 0 0;
+  padding: 4px;
+  height: 4em;
+  width: 80%;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes popClose {
+  0% {
+    width: min(25%, 300px);
+    height: min(25%, 300px);
+    overflow: hidden;
+    font-size: 0;
+    content-visibility: hidden;
+    border-radius: 0%;
+    opacity: 0;
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  50% {
+    content-visibility: visible;
+  }
+}
+
+@keyframes popOpen {
+  0% {
+    border-radius: 50%;
+    height: 50px;
+    width: 50px;
+    overflow: hidden;
+    font-size: 0;
+    content-visibility: hidden;
+    opacity: 0;
+  }
+
+  25% {
+    opacity: 1;
+  }
+
+  50% {
+    content-visibility: visible;
+  }
+}
+
+div.popup.closed *,
+div.popup.open * {
+  animation: fade-in 500ms ease-in;
+}
+
+div.popup.closed,
+div.popup.initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  border-radius: 50%;
+  height: 50px;
+  width: 50px;
+  background-color: var(--logoFontColor);
+  color: white;
+  transition: all 500ms ease-in;
+  cursor: pointer;
+}
+
+div.popup.closed {
+  animation: popClose 500ms ease-in;
+}
+
+div.popup.open {
+  width: min(25%, 500px);
+  height: min(25%, 500px);
+  animation: popOpen 500ms ease-in;
+}
+
+div.popup.closed:hover svg,
+div.popup.initial:hover svg {
+  fill: var(--logoFontColor);
+}
+
+div.popup.closed:hover,
+div.popup.initial:hover {
+  background-color: white;
+}
+
+div.popup.closed svg,
+div.popup.initial svg {
+  fill: white;
+}
+
+/* comments */
+
+div.commentsSection {
+  max-height: 25rem;
+}
+
+div.commentCard {
+  width: 100%;
+  font-size: 12px;
+  padding: 4px;
+}
+
+div.commentsSection ul {
+  list-style-type: none;
+  padding-left: 20px;
+  animation: expandView 500ms var(--notiAnimation);
+}
+
+div.replyPreview {
+  z-index: 10;
+  position: fixed;
+  bottom: 10px;
+  left: 10px;
+  box-shadow: var(--boxShadow);
+}
+
+/* Account page */
+
+div.icon {
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+div.icon img {
+  width: auto;
+  height: 100%;
+}
+
+div.accountPage {
+  flex: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+div.userDetails {
+  height: 100%;
+  flex: 1;
+  border: 1px solid black;
+  padding: 14px;
+  overflow-y: auto;
+}
+
+div.userDetails > form#accountForm {
+  width: 100%;
+  height: auto;
+  margin: 0;
+}
+
+.feed.acct {
+  padding: 6px;
+  width: auto;
+}
+
+div.friendsList ul {
+  list-style-type: none;
+  padding-left: 12px;
+  margin: 8px 0;
+}
+
+div.friendsList h2 {
+  margin: 8px 2px;
+}
+
+/* Register */
+div.register {
+  flex: 1;
+  width: 100%;
+}
+
+div.validationErrors {
+  background-color: rgb(214, 127, 127);
+}
+
+/* notification */
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+div.noti-list {
+  position: fixed;
+  text-align: left;
+  padding: 1em;
+  width: 100%;
+  max-width: 400px;
+  max-height: 50vh;
+  overflow: hidden auto;
+  bottom: 5px;
+  left: 5px;
+  z-index: 5;
+}
+
+div.btn-flex {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+div.btn-flex > button {
+  color: red;
+}
+
+div.noti {
+  opacity: 0.8;
+  padding: 2px 6px;
+  box-shadow: gray 0px 1px 3px 0px, rgb(165, 164, 164) 0px 1px 2px 0px;
+  position: relative;
+  padding-left: 1em;
+  border-radius: 8px;
+}
+
+div.noti.active {
+  animation: slide-in 500ms var(--notiAnimation);
+}
+
+div.noti.inactive {
+  animation: slide-out 500ms var(--notiAnimation);
+}
+
+.noti + .noti {
+  margin-top: 4px;
+}
+
+div.noti.active:hover {
+  opacity: 1;
+}
+
+div.noti.success {
+  color: white;
+  background-color: rgb(74, 185, 139);
+}
+
+div.noti.error {
+  color: white;
+  background-color: rgb(184, 79, 79);
+}
+
+div.noti span {
+  position: absolute;
+  text-align: center;
+  padding: 0px;
+  margin: 0;
+  top: 5px;
+  right: 8px;
+  color: gray;
+  cursor: pointer;
+}
+
+div.noti span:hover {
+  color: red;
+}
+
+/* Inbox */
+
+div.inbox {
+  display: flex;
+  flex: 1;
+  height: 100%;
+}
+
+div.convos {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+p.timestamp {
+  font-size: 10px;
+  text-align: right;
+}
+
+p.username {
+  font-weight: 700;
+}
+
+p.title,
+p.timestamp {
+  font-style: italic;
+}
+
+p.content,
+p.title {
+  margin: 4px 0px;
+}
+
+div.inboxList {
+  padding: 6px;
+  font-size: 14px;
+  position: relative;
+  border-radius: var(--roundedCorner);
+}
+
+div.delete-Btn {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  color: red;
+}
+
+div:nth-child(n + 2 of .inboxList) {
+  margin-top: 6px;
+}
+
+div.inboxList.read {
+  background-color: white;
+}
+
+div.inboxList.unread {
+  background-color: rgb(164, 164, 252);
+  font-weight: 700;
+}
+
+div.inboxReply {
+  flex: 5;
+  display: flex;
+  flex-direction: column;
+}
+
+div.convoChain {
+  flex: 15;
+  display: flex;
+  padding: 0;
+  flex-direction: column;
+  overflow-y: auto;
+  justify-content: space-evenly;
+  flex-wrap: nowrap;
+  overflow: hidden auto;
+  max-height: 80vh;
+  gap: 10px;
+  position: relative;
+}
+
+div.convoChain h1 {
+  text-align: center;
+}
+
+form#replyForm {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1 1 2em;
+  width: calc(100% - 2px);
+  margin: 0 2px;
+  padding: 0 25px;
+}
+
+div.inboxItem {
+  padding: 8px;
+  height: fit-content;
+  width: min(20em, 25%);
+  border-radius: var(--roundedCorner);
+  margin: 12px;
+  box-shadow: var(--boxShadow);
+}
+
+div.inboxItem.left {
+  align-self: flex-start;
+  background-color: rgb(145, 145, 224);
+}
+
+div.inboxItem.right {
+  align-self: flex-end;
+  background-color: rgb(208, 204, 219);
+}
+
+div.empty {
+  flex: 1;
+  background-color: rgb(177, 177, 177);
+}
+
+div.dropDown {
+  box-shadow: var(--boxShadow);
+  background-color: white;
+  transition: all ease-in-out 50ms;
+  z-index: 10;
+  position: absolute;
+  padding: 2px 1em;
+  border-radius: var(--roundedCorner);
+}
+
+div.inboxList > p {
+  margin: 5px 0;
+  cursor: pointer;
+}
+
+div.inboxList:hover {
+  background-color: rgb(193, 232, 255);
+  cursor: pointer;
+  transition: all 200ms ease-in-out;
+}
+
+div.dropDown > p:hover {
+  font-style: italic;
+  cursor: pointer;
+  transition: all 200ms ease-in-out;
+  color: var(--logoFontColor);
+}
+
+div.convos h2 {
+  margin: 20px 0;
+}
+
+div.convos > span {
+  z-index: 10;
+  position: absolute;
+  height: 2em;
+  width: 2em;
+  top: calc(20px + 0.75em);
+  right: 5%;
+  border-radius: 50%;
+  transition: all ease-in-out 100ms;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes spinDown {
+  from {
+    transform-origin: center;
+    transform: rotate(-90deg);
+  }
+  to {
+    transform-origin: center;
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes spinBack {
+  from {
+    transform-origin: center;
+    transform: rotate(0deg);
+  }
+  to {
+    transform-origin: center;
+    transform: rotate(-90deg);
+  }
+}
+
+span.openSearch svg {
+  animation: spinBack 200ms linear;
+  cursor: pointer;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+
+span.closeSearch svg {
+  animation: spinDown 200ms linear;
+  cursor: pointer;
+  transform-origin: center;
+  transform: rotate(0);
+}
+
+@keyframes grow {
+  from {
+    width: 0px;
+    height: 0px;
+    opacity: 0;
+  }
+  to {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+input.friendSearch {
+  animation: grow 500ms ease-in;
+  width: 100%;
+}
+
+div.friendSearchContainer {
+  position: relative;
+  overflow: visible;
+}
+
+div.dropDown {
+  position: absolute;
+  z-index: 5;
+  width: 100%;
+  height: fit-content;
+  max-height: 40vh;
+  overflow: auto;
+  animation: grow 500ms ease-in;
+}
+
+div.dropDown > p {
+  margin: 6px;
+  position: relative;
+}
+
+div.dropDown > h5 {
+  margin: 10px 0;
+}
+
+div.dropDown > button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  color: red;
+}
+
+@keyframes hop {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+div.dropDown > button:hover {
+  animation: hop 200ms ease-in;
+}
+
+div.dropDown > p > div.post-icon,
+div.dropDown > p > div.default-icon {
+  position: absolute;
+  right: 5px;
+  top: 0px;
+  height: 25px;
+  width: 25px;
+  font-size: 0.75rem;
+}
